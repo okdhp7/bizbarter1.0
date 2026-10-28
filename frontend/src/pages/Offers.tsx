@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../auth'
 import { OfferCard } from '../components/ui'
 import { CategoryChip, useMeta } from '../components/Category'
 import type { Offer } from '../types'
+import Pagination from '../components/Pagination'
 
 export default function Offers() {
   const { user } = useAuth()
@@ -12,14 +13,31 @@ export default function Offers() {
   const init = new URLSearchParams(location.search)
   const [f, setF] = useState({ q: init.get('q') ?? '', category: init.get('category') ?? '', offer_type: '', want_cash: '', region: '' })
   const [q, setQ] = useState(f.q)
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(Math.max(1, Number(init.get('page')) || 1))
+  const nav = useNavigate()
   const [data, setData] = useState<{ items: Offer[]; total: number; size: number } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const listTop = useRef<HTMLParagraphElement>(null)
 
   useEffect(() => {
-    const p = new URLSearchParams({ page: String(page), size: '12' })
+    const p = new URLSearchParams({ page: String(page), size: '9' })
     Object.entries(f).forEach(([k, v]) => v && p.set(k, v))
-    api(`/offers?${p}`).then(setData)
+    setLoading(true)
+    api(`/offers?${p}`).then(setData).finally(() => setLoading(false))
+    // 보던 페이지·필터를 주소에 남겨 상세 → 돌아가기 때 그대로 복원
+    const s = new URLSearchParams()
+    Object.entries(f).forEach(([k, v]) => v && s.set(k, v))
+    if (page > 1) s.set('page', String(page))
+    const search = s.toString() ? `?${s}` : ''
+    if (search !== location.search) nav({ search }, { replace: true })
   }, [f, page])
+
+  const goPage = (n: number) => {
+    setPage(n)
+    // 페이지를 바꾸면 목록 머리로 이동
+    const el = listTop.current
+    if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const upd = (k: keyof typeof f, v: string) => { setF({ ...f, [k]: v }); setPage(1) }
   const pages = data ? Math.max(1, Math.ceil(data.total / data.size)) : 1
@@ -68,13 +86,9 @@ export default function Offers() {
       </div>
       {!data ? <div className="empty">불러오는 중…</div> : data.items.length === 0 ? <div className="card empty">조건에 맞는 오퍼가 없습니다.</div> : (
         <>
-          <p className="small muted" style={{ marginBottom: 10 }}>총 {data.total}건</p>
+          <p className="small muted list-top" ref={listTop} style={{ marginBottom: 10 }}>총 {data.total.toLocaleString('ko-KR')}건</p>
           <div className="offer-grid">{data.items.map(o => <OfferCard key={o.id} offer={o} />)}</div>
-          <div className="row" style={{ justifyContent: 'center', marginTop: 20 }}>
-            <button className="btn btn-sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>이전</button>
-            <span className="small muted">{page} / {pages}</span>
-            <button className="btn btn-sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>다음</button>
-          </div>
+          <Pagination page={page} total={pages} onChange={goPage} disabled={loading} label="오퍼 목록 페이지" />
         </>
       )}
     </>

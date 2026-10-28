@@ -683,3 +683,36 @@ button.me-chip { font: inherit; cursor: pointer; text-align: left; }
 @media (max-width: 860px) {
   .cat-select > header { flex-direction: column; align-items: stretch; }
 }
+
+/* ---------- 페이지네이션 (FindBid1.0 추천 입찰공고와 같은 구성, 보라 톤) ---------- */
+.list-top { scroll-margin-top: 84px; }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; padding: 24px 0 6px; }
+.pagination button { display: inline-flex; align-items: center; justify-content: center; height: 38px; min-width: 38px; padding: 0 10px; font: inherit; font-size: 13px; font-weight: 700; color: #252a3c; background: rgba(112, 72, 232, .08); border: 1px solid rgba(112, 72, 232, .38); border-radius: 10px; cursor: pointer; transition: var(--ease); }
+.pagination button:hover:not(:disabled) { color: #17191f; transform: translateY(-1px); }
+.pagination button:not(.active):hover:not(:disabled) { background: rgba(112, 72, 232, .16); border-color: var(--primary); }
+.pagination button.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.pagination button:disabled { cursor: not-allowed; opacity: .4; }
+.pagination button.active:disabled { opacity: 1; }
+.pagination .pagination-direction { min-width: 54px; padding: 0 7px; }
+.pagination button.pagination-direction:not(.active) { background: #e4dafd; border-color: #c3b0f7; }
+.pagination button.pagination-direction:not(.active):hover:not(:disabled) { background: #d6c7fb; border-color: var(--primary); }
+.pagination > span { color: #252a3c; padding: 0 2px; }
+.pagination button:focus-visible, .pagination-jump input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.pagination-jump { display: flex; align-items: center; justify-content: center; gap: 7px; margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--line-strong); color: var(--muted); font-size: 12px; }
+.pagination-jump input { width: 76px; height: 38px; padding: 0 23px 0 7px; text-align: center; font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; appearance: textfield; -moz-appearance: textfield; }
+.pagination-jump input::-webkit-inner-spin-button, .pagination-jump input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.pagination-number-input { position: relative; }
+.pagination-number-arrows { position: absolute; top: 3px; right: 3px; bottom: 3px; display: flex; flex-direction: column; }
+.pagination .pagination-number-arrows button { flex: 1; min-width: 18px; height: auto; padding: 0; border: 0; border-radius: 3px; font-size: 11px; line-height: 1; transform: none; }
+@media (max-width: 860px) {
+  .pagination { gap: 4px; padding-top: 20px; }
+  .pagination button { min-width: 32px; height: 44px; padding: 0 5px; }
+  .pagination .pagination-direction { order: 1; flex: 0 0 auto; margin-top: 6px; white-space: nowrap; }
+  .pagination-jump { order: 2; flex-basis: 100%; margin: 8px 0 0; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line-strong); }
+  .pagination-jump input { height: 44px; }
+}
+
+/* ---------- 오퍼 상세: 상단 돌아가기 ---------- */
+.od-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.od-topbar .crumb { margin-bottom: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.od-back { flex: none; gap: 6px; }

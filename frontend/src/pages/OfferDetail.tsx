@@ -43,9 +43,13 @@ export default function OfferDetail() {
       nav(`/negotiations/${n.id}`)
     } catch (e: any) { setErr(e.message) } finally { setBusy(false) }
   }
+  // 앱 안에서 들어왔으면 이전 화면(보던 목록 페이지·필터 유지), 주소로 바로 들어왔으면 오퍼 목록으로
+  const goBack = () => { if ((window.history.state?.idx ?? 0) > 0) nav(-1); else nav('/') }
+  const backBtn = <button type="button" className="btn btn-sm od-back" onClick={goBack} aria-label="이전 화면으로 돌아가기"><Icon name="back" size={16} />돌아가기</button>
+
   const setStatus = async (status: string) => setO(await api(`/offers/${id}`, { method: 'PATCH', body: { status } }))
 
-  if (err && !o) return <div className="error">{err}</div>
+  if (err && !o) return <div className="stack"><div className="od-topbar"><span />{backBtn}</div><div className="error">{err}</div></div>
   if (!o) return <div className="empty">불러오는 중…</div>
 
   const canNegotiate = !mine && o.status !== 'closed' && o.status !== 'cancelled'
@@ -68,7 +72,10 @@ export default function OfferDetail() {
 
   return (
     <div className={`offer-detail ${canNegotiate ? 'has-cta' : ''}`}>
-      <div className="crumb small muted"><Link to="/">오퍼 둘러보기</Link> › #{o.id}</div>
+      <div className="od-topbar">
+        <div className="crumb small muted"><Link to="/">오퍼 둘러보기</Link> › #{o.id}</div>
+        {backBtn}
+      </div>
 
       <header className="od-head">
         <div className="row wrap" style={{ gap: 6 }}><TypeBadge t={o.offer_type} />{(o.category_names?.length ? o.category_names : [o.category]).map((n, i) => <CategoryTag key={n} name={n} primary={i === 0} className="badge" />)}<Badge kind="offer" value={o.status} /></div>
