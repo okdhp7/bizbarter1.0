@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.venv/
+backend/.env
+frontend/node_modules/
+frontend/dist/
+
+# 환경변수·비밀값 (예시 파일 .env.example 은 올림)
+.env
+*.env
+!*.env.example
+
+# 로그·임시
+*.log
+.watch-stop
+.DS_Store
+Thumbs.db
+
+# 빌드 산출물
+node_modules/
+dist/

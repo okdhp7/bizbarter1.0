@@ -1,0 +1,30 @@
+# 개발 모드 — FindBid 와 같은 방식 (배치/감시 프로그램 불필요)
+#
+#  · 소스 폴더를 컨테이너에 직접 마운트 → 파일을 저장하면 컨테이너가 바로 같은 파일을 봄
+#  · Windows 폴더 마운트는 변경 이벤트가 전달되지 않으므로 polling 으로 감지
+#      frontend : Vite HMR (CHOKIDAR_USEPOLLING)  → 화면 즉시 갱신
+#      backend  : uvicorn --reload (WATCHFILES_FORCE_POLLING) → API 자동 재시작
+#  · restart: unless-stopped (docker-compose.yml) → Docker Desktop 이 켜지면 컨테이너도 자동 실행
+#
+# 최초 1회(또는 package.json·Dockerfile 변경 시)만:  docker compose up -d --build
+services:
+  backend:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8500", "--reload", "--reload-dir", "/app/app"]
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/seed.py:/app/seed.py
+
+  frontend:
+    build:
+      target: dev
+    environment:
+      VITE_PORT: "80"
+      API_PROXY_TARGET: http://backend:8500
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro

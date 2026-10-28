@@ -1,0 +1,71 @@
+# 운영(배포) 모드:  docker compose -f docker-compose.yml up -d --build   (docker-prod.bat)
+# 개발 모드는 docker-compose.override.yml 이 자동으로 함께 적용됨  (docker-up.bat)
+#   웹    http://localhost:3500
+#   API   http://localhost:8500/docs
+#   DB    localhost:5435 (bizbarter / bizbarter)
+name: bizbarter
+
+services:
+  db:
+    image: postgres:16
+    container_name: bizbarter-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bizbarter
+      POSTGRES_PASSWORD: bizbarter
+      POSTGRES_DB: bizbarter
+      TZ: Asia/Seoul
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bizbarter -d bizbarter"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: bizbarter-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://bizbarter:bizbarter@db:5432/bizbarter
+      JWT_SECRET: ${JWT_SECRET:-bizbarter-dev-secret-change-me-0123456789abcdef}
+      CORS_ORIGINS: http://localhost:3500,http://127.0.0.1:3500
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@bizbarter.kr}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-bizbarter2026}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-5-5}
+      PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-1.0}
+      SEED_DEMO: ${SEED_DEMO:-true}
+      TZ: Asia/Seoul
+    ports:
+      - "8500:8500"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    container_name: bizbarter-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3500:80"
+
+  # 외부(다른 네트워크) 휴대폰·PC 테스트용 임시 공개 주소 — docker-tunnel.bat 로 실행
+  #   https://xxxx.trycloudflare.com 형태의 주소가 발급되며, 개발 모드에서는 수정사항이 즉시 반영된다.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: bizbarter-tunnel
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate --url http://frontend:80
+    depends_on:
+      - frontend
+
+volumes:
+  pgdata:
